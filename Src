@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+    <head>
+ <link href="https://fonts.googleapis.com/css?family=Luckiest+Guy" rel="stylesheet">      
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/addons/p5.dom.min.js"></script>           
+     <style>
+       #roll{
+    width:100px;
+    height:50px;
+    border:none;
+    border-radius:3px;
+    border:0.4px solid black;
+    font-family:"Luckiest Guy";
+    font-size:20px;
+    color:tomato;
+    background-color:#444;
+}
+button:focus{
+    outline:none;
+}
+#info{
+    height:35px;
+    width:200px;
+    background-color:white;
+    border-radius:5px;
+    text-align:center;
+    font-family:"Luckiest Guy";
+    color:blue;
+    padding-top:5px;
+    font-size:20px;
+       box-shadow: inset -2px -3px 5px 2px grey;
+}  
+     </style>       
+        <title>Page Title</title>
+    </head>
+    <body>
+    <script>
+    var boxes =[]
+var grid = null;
+var player;
+var isClick = true;
+var no = null;
+var aiNo = null;
+var climb =true; 
+var lines = [];
+var ai ;
+var bomb = [];
+var dice ;
+var roll;
+var diceImg;
+var info; 
+function setup(){ 
+createCanvas(windowWidth,windowHeight).position(0,0);
+background(0);
+ roll = createButton("Roll").id("roll");
+roll.position(width-120,height-80);
+roll.mouseClicked(rollDice)
+info = createDiv("Player").position(width/2-100,0).id("info");
+var c1=0;
+var c2=1;
+var y=-1;
+var color="";
+ grid = width/10;
+for(var i=9;i>-1;i--){
+
+y++;
+if(y%2==0){
+for(var j=0;j<10;j++){
+c2%2==0?color="pink":color="lightblue";
+boxes.push(new Boxes((j*grid)+14,(i*grid)+16,color,c1));
+c1++;
+c2++;
+}
+}
+else{
+for(var j=9;j>-1;j--){
+c2%2==0?color="lightgreen":color="lightgrey";
+boxes.push(new Boxes((j*grid)+14,(i*grid)+16,color,c1));
+c1++;
+c2++;
+}
+}
+}
+
+lines.push(new Ladder(2,44));
+lines.push(new Ladder(10,32));
+lines.push(new Ladder(20,62));
+lines.push(new Ladder(52,69));
+lines.push(new Ladder(72,96));
+lines.push(new Ladder(6,24));
+lines.push(new Ladder(35,89));
+bomb.push(new Bomb(11));
+bomb.push(new Bomb(15));
+bomb.push(new Bomb(37));
+bomb.push(new Bomb(76));
+bomb.push(new Bomb(55));
+bomb.push(new Bomb(67));
+bomb.push(new Bomb(80));
+bomb.push(new Bomb(97));
+player = new Player(0);
+no = player.no;
+ai = new Ai(0);
+aiNo = ai.no;
+dice = new Dice(0);
+}
+function draw(){
+    background(250)
+    for(let b of boxes){
+        b.show()
+    }
+    
+        
+    for(let b of bomb){
+        b.show();
+     }   
+      for(let b of bomb){    
+        if(player.no == b.no){            
+            no = 0;
+        player.opacity -=20;
+        if(player.opacity <=0){player.opacity=0}
+          setTimeout(()=>{  
+            isClick = true;
+            climb = true;
+            player = new Player(no);
+            },1000);
+        }
+        else if(ai.no == b.no){
+        ai.opacity -=20;
+        if(ai.opacity <=0){ai.opacity=0}
+          setTimeout(()=>{
+            aiNo = 0;
+            ai = new Ai(aiNo);
+            isClick =true;
+            
+            },1000);
+        }
+       
+    }
+ for(let l of lines){
+        l.show()
+    }   
+    player.show();
+    dice.show()
+    ai.show()
+    for(let lad of lines){
+        if(player.no == lad.no1){
+        player.opacity -=10;
+        if(player.opacity<=0){player.opacity=0}
+      setTimeout(()=>{
+            no = lad.no2;
+           isClick = true;   
+                   
+           player = new Player(no); 
+           },1000);
+           
+        }
+        else if(ai.no == lad.no1){
+        ai.opacity -=20;
+       if(ai.opacity ==0){ai.opacity=0} 
+        setTimeout(()=>{ 
+            aiNo = lad.no2;
+            ai = new Ai(aiNo);
+            isClick = true;
+            climb =true;
+        roll.style("opacity","1");    
+            },1000);
+        }
+        
+    }
+    if(!isClick){
+     player.opacity-=20;
+            if(player.opacity<=0){ 
+          player = new Player(no);
+       var aiPro = floor(random(1,6));  
+        
+    setTimeout(()=>{
+    dice = new Dice(aiPro); 
+    aiNo+=aiPro;
+    ai = new Ai(aiNo);  
+    climb = true;
+    roll.style("opacity","1");
+    info.html("Player")
+   },1000);
+     
+     setTimeout(()=>{ isClick =true },100);     
+              
+            }   
+    }
+    if(no>=99 ){
+        no=99;        
+     info.html("Player Won!!");
+      setTimeout(()=>{
+ no=0;       
+   
+    restart();
+    },1000);
+    }
+    else if(aiNo >=99){
+        aiNo =99;
+        ai = new Ai(aiNo);
+        
+        info.html("Ai Won!!");
+       setTimeout(()=>{
+    aiNo =0;   
+      restart();
+        },1000);
+    }
+   
+}
+function Boxes(x,y,color,no){
+    this.x = x;
+    this.y =y;
+    this.no = no;
+    this.color = color;
+    this.show = function(){
+fill(this.color);
+rectMode(CENTER);
+noStroke();
+rect(this.x+5,this.y+height/10,grid,grid,4);
+fill("black");
+textSize(15);
+textAlign(CENTER);
+text(this.no,this.x+5,this.y+height/10);
+  
+    }
+}
+
+function Player(no){
+    this.no = no
+    this.pos = boxes[this.no];
+    this.opacity = 250;
+    this.show = function(){   
+     try{
+        fill(255,0,0,this.opacity);
+      stroke(0,0,0,this.opacity);  
+       ellipseMode(CENTER);
+        ellipse(this.pos.x+5,this.pos.y+width/10+14,20,20);
+        }
+        catch(e){}
+    }
+    
+}
+function Ladder(no1,no2){
+    this.no1 = no1;
+    this.no2 = no2;
+    this.pos1 = boxes[this.no1];
+    this.pos2 = boxes[this.no2];
+    this.show = function(){
+        stroke(255,0,0,150);
+        strokeWeight(2);
+   line(this.pos1.x,this.pos1.y+width/10+14,this.pos2.x,this.pos2.y+width/10+14);
+   
+    }
+}
+
+function Bomb(no){
+   this.no = no;
+    this.pos = boxes[this.no];
+    this.textContent = ["👮","💣","👾","👽","👹","👻","🎃","🐞"]
+    this.show = function(){
+     fill(50);
+     rectMode(CENTER);
+     noStroke();
+     rect(this.pos.x+5,this.pos.y+grid+16,grid,grid,4);
+     textAlign(CENTER);
+   text(this.textContent[floor(random(0,this.textContent.length))],this.pos.x+5,this.pos.y+grid+16);
+  
+     
+    }
+}
+
+function rollDice(){
+if(isClick){
+
+ isClick = false;
+ if(climb){
+ climb = false;
+ roll.style("opacity","0.5")
+ info.html("Ai");
+  var pro = floor(random(1,6));
+  dice =new Dice(pro);
+  setTimeout(()=>{no+=pro},500);
+  }
+ 
+ player = new Player(no);
+
+  }
+
+    
+  }
+
+function Ai(no){
+    this.no = no;
+    this.pos = boxes[this.no];
+    this.opacity = 250;
+    this.show = function(){   
+     try{
+        fill(0,200,200,this.opacity);
+      stroke(0,0 ,0,this.opacity);  
+       ellipseMode(CENTER);
+        ellipse(this.pos.x+5,this.pos.y+width/10+14,10,10);
+        }
+        catch(e){}
+    }
+    
+}
+
+function Dice(no){
+    this.x =width-150;
+    this.y =height-55;
+    this.no = no;
+    
+    this.show = function(){
+    push()
+  rectMode(CENTER)  
+  noStroke();
+   if(this.no==0){
+   fill(50);
+   rect(this.x,this.y,50,50,5);    
+   }
+   else if(this.no==1){
+      fill(250,0,0);
+   rect(this.x,this.y,50,50,5); 
+   fill("white");  
+   ellipse(this.x,this.y,5,5);
+   }
+   else if(this.no==2){
+     fill(250,0,0);
+   rect(this.x,this.y,50,50,5);   
+   fill("white");  
+   ellipse(this.x-10,this.y-10,5,5); 
+   ellipse(this.x+10,this.y+10,5,5);
+   }
+   else if(this.no==3){
+       fill(250,0,0);
+   rect(this.x,this.y,50,50,5); 
+    fill("white");  
+   ellipse(this.x,this.y,5,5);
+   ellipse(this.x-15,this.y-15,5,5);
+   ellipse(this.x+15,this.y+15,5,5); 
+   }
+    else if(this.no==4){
+     fill(250,0,0);
+   rect(this.x,this.y,50,50,5); 
+    fill("white");  
+   ellipse(this.x-15,this.y-15,5,5);
+   ellipse(this.x+15,this.y-15,5,5);
+   ellipse(this.x-15,this.y+15,5,5);
+   ellipse(this.x+15,this.y+15,5,5); 
+   }
+    else if(this.no==5){
+     fill(250,0,0);
+   rect(this.x,this.y,50,50,5); 
+      fill("white");  
+   ellipse(this.x,this.y,5,5);
+   ellipse(this.x-15,this.y-15,5,5);
+   ellipse(this.x+15,this.y-15,5,5);
+   ellipse(this.x-15,this.y+15,5,5);
+   ellipse(this.x+15,this.y+15,5,5); 
+   }
+    else if(this.no==6){
+      fill(250,0,0);
+   rect(this.x,this.y,50,50,5);
+     fill("white");  
+   ellipse(this.x-10,this.y,5,5); 
+    ellipse(this.x+10,this.y,5,5);
+   ellipse(this.x-10,this.y-15,5,5);
+   ellipse(this.x+10,this.y-15,5,5);
+   ellipse(this.x-10,this.y+15,5,5);
+   ellipse(this.x+10,this.y+15,5,5); 
+   }
+    pop();
+    }
+}
+function restart(){
+                  
+    player = new Player(0);
+no = 0;
+ai = new Ai(0);
+aiNo = 0;
+dice = new Dice(0);
+}    
+    </script>
+    </body>
+</html>
